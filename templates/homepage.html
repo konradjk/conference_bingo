@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script type="text/javascript">
+    window.conferences = {{ conferences|tojson|safe }};
+
+    $(document).ready(function() {
+        $('#conference_selector').change(function() {
+            if ($(this).val() == 'other') {
+                $('#conference_other').show();
+            } else {
+                $('#conference_other').hide();
+            }
+        });
+        $('#email').change(function() {
+            if ($(this).val() == 'admin@admin') {
+                $('#password').show();
+            } else {
+                $('#password').hide();
+            }
+        });
+    });
+</script>
+<div class="container">
+    <form class="form-signin" role="form" action="{{ url_for('bingo') }}" method="post">
+        <h2 class="form-signin-heading">Please sign in</h2>
+        <input id="email" name="email" type="email" class="form-control" placeholder="Email address" required autofocus>
+        <br/>
+        <input id="password" name="password" type="password" class="form-control" placeholder="Password" style="display: none;">
+        <label class="form-inline" for="conference_selector">
+            Conference: &nbsp;
+            <select name="conference" id="conference_selector" class="form-control">
+                {% for conference in conferences %}
+                    <option value="{{ conference }}">{{ conference }}</option>
+                {% endfor %}
+{#                <option value="other">Other</option>#}
+            </select>
+            <input type="text" name="conference_other" id="conference_other" placeholder="Conference name" style="display: none;"/>
+        </label>
+        <br/>
+        <input class="btn btn-lg btn-primary btn-block" type="submit"/>
+    </form>
+</div> <!-- /container -->
+{% endblock %}

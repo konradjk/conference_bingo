@@ -1,0 +1,60 @@
+Oxford Nanopore
+Reference to Lior Pachter
+"Big Data"
+1000 Genomes
+UK10K
+ENCODE
+GTEx
+Genomics England
+Picture of HiSeq X Ten
+The pain of migrating to GRCh38
+Plot on cost of sequencing
+Weissman Score
+Single cell sequencing
+CRISPR 
+Speaker consciously hitting bingo terms
+Crowdsourcing
+Uninterpretable network diagram
+"80% functional"
+Referring to heatmap as a "quilt plot"
+Reference to "Manolis", last name not specified
+Tiny P value, Tiny effect size
+Galaxy
+"Broad-scale"
+Mentioning Dan Graur
+Mention of Scottish independence
+>100,000 genomes
+Open-source software
+Use the term "gene name" instead of "gene symbol"
+REST API
+"Tip of the Iceberg"
+"Avalanche/Tsunami of Data"
+Pronouncing "de Bruijn" correctly
+Use of non-standard '-ome'/'-omics' term
+NP-complete
+Baby poo 
+Moleculo
+Microbes outnumbering human cells 10:1
+"Min-eye-on" and "Minyun" in same talk for MinION
+Hidden Markov Model(s)
+Advertisement for postdoc position(s)
+Cute backronym for a new algorithm
+Complaint about dbGaP or SRA
+Kardashian index
+Graph-based reference
+Complaint about wireless network
+Video that doesn't play
+Mention of "hashtag" during a talk
+Analysis in the Cloud
+Bioinformatics bottleneck
+Data generation is easy - interpretation hard
+We need more sequencing
+1000$ genome
+Please don't tweet this slide/talk
+Integrate genomics with other omics
+We developed a new pipeline
+This work would not have been possible
+Big Data
+Reference to bingo (meta)
+Depth (Sequencing)
+K-mer spectra

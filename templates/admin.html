@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/theme.default.css') }}">
+<script type="text/javascript">
+    window.terms_seen = {{ terms_seen|tojson|safe }};
+    window.cards = {{ cards|tojson|safe }};
+    window.conference = {{ conference|tojson|safe }};
+    window.terms_selected = {{ terms_selected|tojson|safe }};
+
+    $(document).ready(function() {
+        $.tablesorter.addParser({
+            id: "date-sort",
+            is: function(s) {
+                return false;
+            },
+            format: function (s) {
+                return (Date.parse(s)/1000);
+            },
+            type: "numeric"
+        });
+        $('.tablesorter').tablesorter({
+            widthFixed: true
+        });
+        $('.win_True > td').css('background-color', '#BDFF9D');
+    });
+</script>
+<div class="container">
+    <h2>{{ conference }} admin page</h2>
+    <p>
+        There are currently <span id="number-playing">{{ number_playing }}</span> people playing {{ conference }} bingo.
+    </p>
+    <div class="row">
+        <div class="col-md-6">
+            <table id='terms_table' class="tablesorter">
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Selected</th>
+                        <th>Found</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for term in terms_selected %}
+                        <tr>
+                            <td>{{ term[0] }}</td>
+                            <td>{{ term[1] }}</td>
+                            <td>{{ terms_seen[term[0]] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <table id='cards_table' class="tablesorter">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Card</th>
+                        <th># Selected</th>
+                        <th># True Selected</th>
+                        <th class="sorter-date-sort">Time created</th>
+                        <th class="sorter-date-sort">Time modified</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for card in cards %}
+                        <tr class="win_{{ card[1].win }}">
+                            <td>{% if card[1].win %}
+                                <a href="/permalink?id={{ card[0] }}">{{ card[1].email }}</a>
+                            {% else %}
+                                <a href="/bingo?conference={{ conference }}&email={{ card[1].email }}">{{ card[1].email }}</a>
+                            {% endif %}</td>
+                            <td>{{ card[1].index }}</td>
+                            <td>{{ card[1].selected }}</td>
+                            <td>{{ card[1].selected_concordant }}</td>
+                            <td>{{ card[1].date_created }}</td>
+                            <td>{{ card[1].date_modified }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> <!-- /container -->
+
+{% endblock %}

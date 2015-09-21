@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="Bingo!">
+        <meta name="author" content="Konrad Karczewski">
+
+        <title>Conference Bingo</title>
+
+        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-1.11.1.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.tablesorter.min.js') }}"></script>
+        <!-- Custom styles for this template -->
+        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/bingo.css') }}">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/underscore-min.js') }}"></script>
+    </head>
+
+<body>
+    <div id="header">
+        <div class="container">
+            <span>
+                <a href="/" style="color: white; font-weight: bold;">Conference Bingo</a>
+            </span>
+            <div id="header-links">
+                <a href="/">Home</a> |
+                <a href="/about">About</a>
+            </div>
+        </div>
+    </div>
+    {% block body %}{% endblock %}
+</body>
+</html>

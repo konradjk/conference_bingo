@@ -1,0 +1,224 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script type="text/javascript">
+    window.card = {{ card|tojson|safe }};
+    window.email = {{ email|tojson|safe }};
+    window.conference = {{ conference|tojson|safe }};
+    window.finished_cards = {{ finished_cards|tojson|safe }};
+
+    function check_win() {
+        return check_rows() || check_columns() || check_diagonal();
+    }
+    function check_rows() {
+        return _.some($.map(['a', 'b', 'c', 'd', 'e'], function(i) {
+            return $('#bingo_table_current').find('.' + i + ' > td.bingo_selected').length == 5;
+        }));
+    }
+    function check_columns() {
+        return _.some($.map([1, 2, 3, 4, 5], function(j) {
+            return $('#bingo_table_current').find('td.bingo_selected.' + j).length == 5;
+        }));
+    }
+    function check_diagonal() {
+        var total1 = 0, total2 = 0;
+        $.map(['a', 'b', 'c', 'd', 'e'], function(i, j) {
+            var k = j + 1;
+            total1 += $('#bingo_table_current').find('.' + i + ' > td.bingo_selected.' + k).length;
+        });
+        $.map(['a', 'b', 'c', 'd', 'e'], function(i, j) {
+            var k = 5 - j;
+            total2 += $('#bingo_table_current').find('.' + i + ' > td.bingo_selected.' + k).length;
+        });
+        return total1 == 5 || total2 == 5;
+    }
+
+    function store_card() {
+        var selected_squares = {};
+        $('#bingo_table_current').find('td').map(function() {
+            var this_id = $(this).attr('id').replace('cell_', '');
+            selected_squares[this_id] = $(this).hasClass('bingo_selected');
+        });
+        var output = {
+            'card' : selected_squares,
+            'email' : window.email,
+            'conference' : window.conference
+        };
+        $.ajax({
+            url: 'update_card',
+            type: 'POST',
+            data: JSON.stringify(output),
+            contentType: "application/json",
+            dataType: "json",
+            success: function (response) {
+                $('#number-playing').html(response);
+            }
+        });
+    }
+
+    function undo_card(index) {
+        $('.bingo-undo-number').val(index);
+        $('#bingo-undo').modal();
+    }
+
+    $(document).ready(function() {
+        $('#bingo_table_current').find('td').click(function(){
+            $(this).toggleClass('bingo_selected');
+            store_card();
+            if (check_win()) {
+                $('#bingo-winner').modal();
+            }
+        });
+    });
+</script>
+<div class="container">
+    <h2>{{ conference }}: {{ email }}</h2>
+    <p>
+        There are currently <span id="number-playing">{{ number_playing }}</span> people playing {{ conference }} bingo.
+    </p>
+{#    {% if card %}#}
+        <span class="row">
+            <span class="col-md-2">
+                <div class="tabbable tabs-left">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="active"><a href="#bingo_table_current_container" role="tab" data-toggle="tab">Current card</a></li>
+                        {% if finished_cards %}
+                            {% for finished_card in finished_cards %}
+                                <li><a href="#bingo_table_{{ finished_card.index }}_container" role="tab" data-toggle="tab">Card {{ finished_card.index }}</a></li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+                </div>
+            </span>
+            <span class="col-md-10">
+                <div class="tab-content">
+                    <div id="bingo_table_current_container" class="tab-pane active">
+                    {% if card %}
+                        <table id="bingo_table_current" border="1" cellspacing="0" cellpadding="4">
+                        {% for term_group in card.order %}
+                            <tr align='middle' style='height:100px' class="{{ loop.cycle("a", "b", "c", "d", "e") }}">
+                            {% for term in term_group %}
+                                <td id="cell_{{ term }}" width='20%' class=
+                                        "{% if card.selected[term] %}
+                                            bingo_selected
+                                        {% endif %}
+                                        {{ loop.cycle(1, 2, 3, 4, 5) }}">
+                                    {{ term }}
+                                </td>
+                            {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        </table>
+                    {% else %}
+                        You have no current cards (or you've used a different email).
+                        {% if finished_cards %}
+                            You have {{ finished_cards|length }} finished cards.
+                        {% endif %}
+                        <form id="create_card_form" role="form" action="{{ url_for('create_card') }}" method="post">
+                            <button class="btn btn-primary" type="submit">Create a card</button>
+                            <span style="display: none;">
+                                <input type="text" name="email" value={{ email }}>
+                                <input type="text" name="conference" value={{ conference }}>
+                            </span>
+                        </form>
+                    {% endif %}
+                    </div>
+                    {% if finished_cards %}
+                        {% for finished_card in finished_cards %}
+                            <div class="tab-pane" id="bingo_table_{{ finished_card.index }}_container">
+                                <p>
+                                    <button class="btn btn-danger" onclick="undo_card('{{ finished_card.index }}')">Undo complete card</button>
+                                    <a href="/permalink?id={{ finished_card._id }}" target="_blank">Permalink</a>
+                                    <span style="float: right;">
+                                        <a class="btn btn-success" href="https://twitter.com/intent/tweet?text=BINGO!&hashtags={{ conference }}&url=http://gi2014bingo.org/permalink?id={{ finished_card._id }}" target='_blank'>Tweet your card</a>
+                                    </span>
+                                </p>
+                                <table id="bingo_table_{{ finished_card.index }}" border="1" cellspacing="0" cellpadding="4">
+                                {% for term_group in finished_card.card.order %}
+                                    <tr align='middle' style='height:100px' class="{{ loop.cycle("a", "b", "c", "d", "e") }}">
+                                    {% for term in term_group %}
+                                        <td id="cell_{{ term }}" width='20%' class=
+                                                "{% if finished_card.card.selected[term] %}
+                                                    bingo_selected
+                                                {% endif %}
+                                                {{ loop.cycle(1, 2, 3, 4, 5) }}">
+                                            {{ term }}
+                                        </td>
+                                    {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                                </table>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </span>
+        </span>
+</div> <!-- /container -->
+
+{# Modals #}
+<div id="bingo-winner" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="bingo-winner-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="confirm_submit_form" role="form" action="{{ url_for('update_card_win') }}" method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h1 class="modal-title" id="bingo-winner-label">BINGO!</h1>
+                </div>
+                <div class="modal-body">
+                    <p style='font-size:16pt;'>
+                        You've completed a card!
+                    </p>
+                    Click "Confirm Submit Card" below to register a winning card.
+                    <p>
+                        <label for="bingo-card-name">
+                            (Optional) add your name to the card
+                        </label>
+                        <input type="text" name="bingo-card-name">
+                    </p>
+                    Please do not confirm unless you truly have a winning card (anti-cheating measures are in place).
+                    Then, you will get a link to your card to post it on Twitter!
+                </div>
+                <span style="display: none;">
+                    <input type="text" name="email" value={{ email }}>
+                    <input type="text" name="conference" value={{ conference }}>
+                </span>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel Submit</button>
+                    <input type="submit" class="btn btn-success" value="Confirm Submit Card">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div id="bingo-undo" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="bingo-undo-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="undo_card_form" role="form" action="{{ url_for('undo_card') }}" method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h2 class="modal-title" id="bingo-undo-label">Undo submit card?</h2>
+                </div>
+                <div class="modal-body">
+                    <label for="bingo-undo-number">
+                        Do you want to undo your submission of card:
+                    </label>
+                    <input class="bingo-undo-number" name="bingo-undo-number" type="text" value="1" disabled>
+                    <span style="display: none;">
+                        <input class="bingo-undo-number" name="bingo-undo-number" type="text" value="1">
+                        <input type="text" name="email" value={{ email }}>
+                        <input type="text" name="conference" value={{ conference }}>
+                    </span>
+                    <p>
+                        <b>Warning:</b> this will delete your current card and replace it with the card you are undoing.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel undo</button>
+                    <input type="submit" class="btn btn-danger" value="Undo submission"/>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

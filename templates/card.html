@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script type="text/javascript">
+    window.card = {{ card|tojson|safe }};
+</script>
+<div class="container">
+    <div class="row">
+        {% if card %}
+            {% if card.name %}
+                <h2>{{ card.name }}'s card</h2>
+            {% else %}
+                <h2>Anonymous card</h2>
+            {% endif %}
+            <p>
+                Won on: {{ card.date }}
+            </p>
+            <table id="bingo_table_current" border="1" cellspacing="0" cellpadding="4">
+            {% for term_group in card.order %}
+                <tr align='middle' style='height:100px' class="{{ loop.cycle("a", "b", "c", "d", "e") }}">
+                {% for term in term_group %}
+                    <td id="cell_{{ term }}" width='20%' class=
+                            "{% if card.selected[term] %}
+                                bingo_selected
+                            {% endif %}
+                            {{ loop.cycle(1, 2, 3, 4, 5) }}">
+                        {{ term }}
+                    </td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </table>
+        {% else %}
+            <h2>
+                Card not found.
+            </h2>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
