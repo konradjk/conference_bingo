@@ -73,7 +73,7 @@
 </script>
 <div class="container">
     <h2>#{{ conference }}: {{ email }}</h2>
-    <span style="float: right;"><a href="/logout">Logout ({{ email }})</a></span>
+    <span style="float: right;"><a href="/logout">Logout ({{ email }}, #{{ conference }})</a></span>
     <p>
         There are currently <span id="number-playing">{{ number_playing }}</span> people playing #{{ conference }} bingo.
     </p>
@@ -131,8 +131,11 @@
                                     <button class="btn btn-danger" onclick="undo_card('{{ finished_card.index }}')">Undo complete card</button>
                                     <a href="/permalink?id={{ finished_card._id }}" target="_blank">Permalink</a>
                                     <span style="float: right;">
-                                        <a class="btn btn-success" href="https://twitter.com/intent/tweet?text=BINGO!&hashtags={{ conference }}&url=http://gi2014bingo.org/permalink?id={{ finished_card._id }}" target='_blank'>Tweet your card</a>
+                                        <a id='tweet_button' class="btn btn-success" target='_blank'>Tweet your card</a>
                                     </span>
+                                    <script type="text/javascript">
+                                        $('#tweet_button').attr('href', 'https://twitter.com/intent/tweet?text=BINGO!&hashtags={{ conference }}&url=http://' + window.location.hostname + '/permalink?id={{ finished_card._id }}');
+                                    </script>
                                 </p>
                                 <table id="bingo_table_{{ finished_card.index }}" border="1" cellspacing="0" cellpadding="4">
                                 {% for term_group in finished_card.card.order %}
