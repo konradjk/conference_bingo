@@ -72,7 +72,8 @@
     });
 </script>
 <div class="container">
-    <h2>{{ conference }}: {{ email }}</h2>
+    <h2>#{{ conference }}: {{ email }}</h2>
+    <span style="float: right;"><a href="/logout">Logout ({{ email }})</a></span>
     <p>
         There are currently <span id="number-playing">{{ number_playing }}</span> people playing {{ conference }} bingo.
     </p>

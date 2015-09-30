@@ -1,10 +1,11 @@
 
 import pymongo
-import random
-import sys
-import datetime
-from flask import Flask, request, g, redirect, render_template
+from flask import *
 from bson.objectid import ObjectId
+import glob
+import os
+from cards import *
+from conferences import *
 
 SELECTED_CUTOFF = 5
 
@@ -17,7 +18,7 @@ app.config.update(dict(
     DEBUG=True,
     SECRET_KEY='development key',
 
-    TERMS_FILE='bingo.txt'
+    TERMS_FILES=glob.glob('terms/*.txt')
 ))
 
 
@@ -35,24 +36,35 @@ def load_db():
     """
     db = get_db()
 
-    # Initialize database
-    # Don't need to explicitly create tables with mongo, just indices
-
     db.terms.remove()
     db.terms.ensure_index('conference')
 
-    # db.cards.remove()
-    # db.cards.ensure_index('conference')
-    # db.cards.ensure_index('email')
+    delete_cards()
 
-    # grab terms from list
-    terms_list = open(app.config['TERMS_FILE'])
+    # grab terms from all lists
+    for terms_file in app.config['TERMS_FILES']:
+        load_conference_from_file(terms_file)
+
+
+def load_conference_from_file(terms_file):
+    db = get_db()
+    conference = os.path.basename(terms_file).split('.txt')[0]
+    db.terms.remove({'conference': conference})
+    terms_list = open(terms_file)
     for line in terms_list:
         term = line.strip()
         db.terms.insert({
-            'conference': 'gi2014',
-            'term': term
+            'conference': conference,
+            'term': term,
+            'date_created': datetime.datetime.utcnow()
         })
+
+
+def delete_cards():
+    db = get_db()
+    db.cards.remove()
+    db.cards.ensure_index('conference')
+    db.cards.ensure_index('email')
 
 
 def get_db():
@@ -65,102 +77,19 @@ def get_db():
     return g.db_conn
 
 
-def get_bingo_terms(conference=None):
-    db = get_db()
-    if conference is None:
-        return list(db.terms.find(fields={'_id': False}))
-    else:
-        return list(db.terms.find({'conference': conference}, fields={'_id': False}))
-
-
-def create_new_card(conference):
-    db = get_db()
-    all_terms = [x['term'] for x in db.terms.find({'conference': conference}, fields={'_id': False})]
-    random.shuffle(all_terms)
-    raw_card = all_terms[:24]
-    raw_card.insert(12, 'FREE SPACE')
-    card_order = [raw_card[i*5:i*5+5] for i in range(5)]
-    selected = dict([(x, False) for x in raw_card])
-    selected['FREE SPACE'] = True
-    card = {
-        'order': card_order,
-        'selected': selected
-    }
-    return card
-
-
-def get_conferences():
-    db = get_db()
-    return list(set([x['conference'] for x in db.terms.find()]))
-
-
-def get_unfinished_card(db, email, conference):
-    card = db.cards.find_one({'email': email, 'conference': conference, 'win': False}, fields={'_id': False})
-    if card is None:
-        return None
-    else:
-        return card['card']
-
-
-def get_finished_cards(db, email, conference):
-    cards = db.cards.find({'email': email, 'conference': conference, 'win': True})
-    if cards is None:
-        return None
-    else:
-        cards = list(cards)
-        for card in cards:
-            card['_id'] = str(card['_id'])
-        return [x for x in sorted(cards, key=lambda k: k['index'])]
-
-
-def store_card(db, email, conference, card):
-    all_cards = list(db.cards.find({'email': email, 'conference': conference}))
-    index = 1 if len(all_cards) == 0 else max([x['index'] for x in all_cards]) + 1
-    db.cards.insert({
-        'conference': conference,
-        'email': email,
-        'card': card,
-        'date_created': datetime.datetime.utcnow(),
-        'date_modified': datetime.datetime.utcnow(),
-        'win': False,
-        'index': index,
-        'name': ''
-    })
-
-
-def update_card_db(db, email, conference, new_card_selected, win):
-    card = db.cards.find_one({
-        'email': email,
-        'conference': conference,
-        'win': False
-    })
-    try:
-        card['card']['selected'] = new_card_selected
-        card['date_modified'] = datetime.datetime.utcnow()
-        card['win'] = win
-    except TypeError, e:
-        print >> sys.stderr, e
-        print >> sys.stderr, "Issue with card from %s @ %s" % (email, conference)
-    if not card:
-        print 'wat'
-        sys.exit(1)
-    db.cards.save(card)
-
-
-def get_number_of_players(db, conference):
-    return len(set([x['email'] for x in db.cards.find(
-        {
-            'conference': conference,
-            'date_modified': {
-                "$gt": datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
-            }
-        }
-    )]))
-
-
 @app.route('/')
 def home():
-    conferences = get_conferences()
+    username = request.cookies.get('username')
+    conference = request.cookies.get('conference')
+    if username is not None:
+        return return_bingo_card(username, conference)
+    else:
+        return basic_homepage()
+
+
+def basic_homepage():
+    db = get_db()
+    conferences = get_conferences(db)
     return render_template('homepage.html', conferences=conferences)
 
 
@@ -171,37 +100,30 @@ def bingo():
             request.form = request.get_json()
         if request.form is None:
             return redirect('/')
-        db = get_db()
         conference = request.form['conference']
         email = request.form['email']
         if email == 'admin@admin':
             return redirect('/admin', code=307)
-        card = get_unfinished_card(db, email, conference)
-        number_playing = get_number_of_players(db, conference)
-        finished_cards = get_finished_cards(db, email, conference)
-        return render_template(
-            "bingo.html",
-            conference=conference,
-            card=card,
-            email=email,
-            finished_cards=finished_cards,
-            number_playing=number_playing
-        )
+        return return_bingo_card(email, conference)
     else:
-        db = get_db()
         conference = request.args.get('conference')
         email = request.args.get('email')
-        card = get_unfinished_card(db, email, conference)
-        number_playing = get_number_of_players(db, conference)
-        finished_cards = get_finished_cards(db, email, conference)
-        return render_template(
-            "bingo.html",
-            conference=conference,
-            card=card,
-            email=email,
-            finished_cards=finished_cards,
-            number_playing=number_playing
-        )
+        return return_bingo_card(email, conference)
+
+
+def return_bingo_card(email, conference):
+    db = get_db()
+    card = get_unfinished_card(db, email, conference)
+    number_playing = get_number_of_players(db, conference)
+    finished_cards = get_finished_cards(db, email, conference)
+    return render_template(
+        "bingo.html",
+        conference=conference,
+        card=card,
+        email=email,
+        finished_cards=finished_cards,
+        number_playing=number_playing
+    )
 
 
 @app.route("/update_card", methods=["GET", "POST"])
@@ -235,9 +157,12 @@ def update_card_win():
 def create_card():
     db = get_db()
     if request.method == 'POST':
-        card = create_new_card(request.form['conference'])
+        card = create_new_card(db, request.form['conference'])
         store_card(db, request.form['email'], request.form['conference'], card)
-        return redirect('/bingo', code=307)
+        resp = make_response(redirect('/bingo', code=307))
+        resp.set_cookie('username', request.form['email'])
+        resp.set_cookie('conference', request.form['conference'])
+        return resp
     else:
         return redirect('/')
 
@@ -245,6 +170,14 @@ def create_card():
 @app.route('/about')
 def about():
     return render_template('about.html')
+
+
+@app.route('/logout')
+def logout():
+    resp = make_response(basic_homepage())
+    resp.set_cookie('username', '', expires=0)
+    resp.set_cookie('conference', '', expires=0)
+    return resp
 
 
 @app.route('/undo_card', methods=["GET", "POST"])
@@ -278,14 +211,6 @@ def permalink():
         'card.html',
         card=card_returned
     )
-
-
-def delete_unfinished_card(db, email, conference):
-    db.cards.remove({
-        'email': email,
-        'conference': conference,
-        'win': False
-    })
 
 
 @app.route('/admin', methods=["POST"])
