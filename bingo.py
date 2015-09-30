@@ -2,6 +2,7 @@
 import pymongo
 from flask import *
 from bson.objectid import ObjectId
+import bson.errors
 import glob
 import os
 from cards import *
@@ -116,14 +117,17 @@ def return_bingo_card(email, conference):
     card = get_unfinished_card(db, email, conference)
     number_playing = get_number_of_players(db, conference)
     finished_cards = get_finished_cards(db, email, conference)
-    return render_template(
+    resp = make_response(render_template(
         "bingo.html",
         conference=conference,
         card=card,
         email=email,
         finished_cards=finished_cards,
         number_playing=number_playing
-    )
+    ))
+    resp.set_cookie('username', email)
+    resp.set_cookie('conference', conference)
+    return resp
 
 
 @app.route("/update_card", methods=["GET", "POST"])
@@ -200,13 +204,16 @@ def undo_card():
 @app.route('/permalink')
 def permalink():
     db = get_db()
-    card = db.cards.find_one({'win': True, '_id': ObjectId(request.args.get('id'))})
     card_returned = None
-    if card is not None:
-        card_returned = card['card']
-        card_returned['date'] = card['date_modified']
-        if card['name'] != '':
-            card_returned['name'] = card['name']
+    try:
+        card = db.cards.find_one({'win': True, '_id': ObjectId(request.args.get('id'))})
+        if card is not None:
+            card_returned = card['card']
+            card_returned['date'] = card['date_modified']
+            if card['name'] != '':
+                card_returned['name'] = card['name']
+    except bson.errors.InvalidId:
+        pass
     return render_template(
         'card.html',
         card=card_returned
