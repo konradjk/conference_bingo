@@ -24,7 +24,7 @@
                                 bingo_selected
                             {% endif %}
                             {{ loop.cycle(1, 2, 3, 4, 5) }}">
-                        {{ term }}
+                        {{ term.replace('\u002E', '.').replace('\u0024', '$') }}
                     </td>
                 {% endfor %}
                 </tr>

@@ -53,7 +53,7 @@ def load_conference_from_file(terms_file):
     db.terms.remove({'conference': conference})
     terms_list = open(terms_file)
     for line in terms_list:
-        term = line.strip()
+        term = line.strip().replace('.', '\u002E').replace('$', '\u0024')
         db.terms.insert({
             'conference': conference,
             'term': term,
