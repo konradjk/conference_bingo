@@ -227,7 +227,7 @@ def admin():
     db = get_db()
     conference = request.form['conference']
     terms = list(db.terms.find({'conference': conference}, fields={'_id': False}))
-    cards = list(db.cards.find({'conference': conference}, fields={'_id': False}))
+    cards = list(db.cards.find({'conference': conference}))
     terms_frequency = dict([(x['term'], 0) for x in terms])
     terms_selected = dict([(x['term'], 0) for x in terms])
     terms_frequency['FREE SPACE'] = 0
