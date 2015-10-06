@@ -28,7 +28,7 @@
 <div class="container">
     <h2>{{ conference }} admin page</h2>
     <p>
-        There are currently <span id="number-playing">{{ number_playing }}</span> people playing {{ conference }} bingo.
+        There are a total of {{ cards|length }} cards with <span id="number-playing">{{ number_playing }}</span> people currently playing {{ conference }} bingo.
     </p>
     <div class="row">
         <div class="col-md-6">
@@ -43,7 +43,7 @@
                 <tbody>
                     {% for term in terms_selected %}
                         <tr>
-                            <td>{{ term[0] }}</td>
+                            <td>{{ term[0]|replace("\\u002E", ".")|replace("\\u0024", "$") }}</td>
                             <td>{{ term[1] }}</td>
                             <td>{{ terms_seen[term[0]] }}</td>
                         </tr>
