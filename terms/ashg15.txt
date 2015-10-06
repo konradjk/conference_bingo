@@ -1,0 +1,62 @@
+Reference to Lior Pachter
+1000 Genomes
+UK10K
+ENCODE
+GTEx
+Picture of HiSeq X Ten
+GRCh38
+Plot on cost of sequencing/Moore's law
+Single cell sequencing
+CRISPR
+Uninterpretable network diagram
+80% functional
+Reference to "Manolis", last name not specified
+Tiny P value, Tiny effect size
+Open-source software
+Use of non-standard -omics term
+Data from long-range reads (Moleculo or 10X)
+Advertisement for postdoc position(s)
+Complaint about dbGaP or SRA
+Mention of hashtag during a talk
+Analysis in the Cloud
+Bioinformatics bottleneck
+Data generation is easy - interpretation hard
+$1000 genome
+Please don't tweet this slide/talk
+Integrate genomics with other omics
+Big Data
+Reference to bingo (meta)
+p < 2.2e-16
+Missing Heritability
+ASE
+Relaxed threshold/nearly significant
+Let's discuss offline
+Causal variant
+Trans-ethnic
+Mendelian randomization
+CVAS/RVAS
+>3 slides of QC
+Precision medicine
+Talk with less than 3 figures total (nearly all text slides)
+Ownership of DNA data
+ClinVar
+Logos on slides (breaking ASHG rules)
+Reference to micropig
+Fine-mapping
+Functional enrichment
+Multiple testing burden
+Reference bias
+"Disruptive" or "Innovation"
+Use of ExAC data (not by ExAC consortium)
+Somatic mosaicism
+de novo mutation
+Haplotype phasing
+I would like to thank the organizers...
+In this cartoon...
+P = 0
+Nanopore
+Any accuracy over 99.99%
+Slide formatting issue
+Need better phenotyping
+Reference to Iceland
+Baltimore-related joke (The Wire, Orioles, etc.)
